@@ -14,8 +14,6 @@ class InitialViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-    
-        
     }
     
     @IBAction func startARBtnPressed(_ sender: UIButton) {
@@ -26,7 +24,7 @@ class InitialViewController: UIViewController {
         }
     }
     
-    func showAlert() {
+    private func showAlert() {
         let alert = UIAlertController(title: "AR Not Supported", message: "Your divice does not support AR", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         self.present(alert, animated: true, completion: nil)
