@@ -14,6 +14,7 @@ class SceneViewController: UIViewController, ARSCNViewDelegate {
     @IBOutlet var sceneView: ARSCNView!
     
     var dotNodes = [SCNNode]()
+    var textNode = SCNNode()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -43,6 +44,16 @@ class SceneViewController: UIViewController, ARSCNViewDelegate {
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        
+        if dotNodes.count >= 2 {
+            for dot in dotNodes {
+                dot.removeFromParentNode()
+            }
+            
+            dotNodes = [SCNNode]()
+        }
+        
+        
         guard let location = touches.first?.location(in: sceneView) else {
             print("No location found")
             return
@@ -58,15 +69,14 @@ class SceneViewController: UIViewController, ARSCNViewDelegate {
             return
         }
         
-        let dot = addDotNode()
-        
+        let dot = addDotNode(at: result)
         dot.transform = SCNMatrix4(result.worldTransform)
         
         sceneView.scene.rootNode.addChildNode(dot)
         
     }
     
-    private func addDotNode() -> SCNNode {
+    private func addDotNode(at result : ARRaycastResult) -> SCNNode{
         let dotGeometry = SCNSphere(radius: 0.005)
         let dotMaterial = SCNMaterial()
         
@@ -75,8 +85,49 @@ class SceneViewController: UIViewController, ARSCNViewDelegate {
         
         let dotNode = SCNNode(geometry: dotGeometry)
         
+        dotNode.position = SCNVector3(
+        result.worldTransform.columns.3.x,
+        result.worldTransform.columns.3.y,
+        result.worldTransform.columns.3.z)
+        
+        dotNodes.append(dotNode)
+    
+        if dotNodes.count >= 2 {
+            calculate()
+        }
+        
         return dotNode
         
     }
+    
+    private func calculate() {
+        let start = dotNodes[0]
+        let end = dotNodes[1]
+        
+        let distance = sqrt(
+            pow(end.position.x - start.position.x, 2) +
+            pow(end.position.y - start.position.y, 2) +
+            pow(end.position.z - start.position.z, 2)
+        )
+        
+        updateText(text: "\(abs(distance))", atPosition: end.position)
+        print(distance)
+
+    }
+    
+    private func updateText(text: String, atPosition position: SCNVector3) {
+        
+        textNode.removeFromParentNode()
+        
+        let textGeometry = SCNText(string: text, extrusionDepth: 1.0)
+        textGeometry.firstMaterial?.diffuse.contents = UIColor.red
+        textNode = SCNNode(geometry: textGeometry)
+        textNode.position = SCNVector3(position.x, position.y + 0.01, position.z)
+        textNode.scale = SCNVector3(0.01, 0.01, 0.01)
+        
+        sceneView.scene.rootNode.addChildNode(textNode)
+    }
+    
+    
    
 }
